@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random game</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        #myCanvas {
+            margin-left: 30%;
+            background-color: rgb(56, 180, 18);
+            background-image: linear-gradient(to bottom right, rgb(248, 7, 7), rgb(255, 187, 0));
+        }
+
+        p {
+            color: white;
+        }
+    </style>
+
+</head>
+<body>
+
+    <p id="score">Score: 0</p>
+    <p id="record">Record: 0</p>
+    
+    <canvas id="myCanvas" width="600" height="600" style="border:1px solid #d3d3d3;"></canvas>
+
+    <script>
+        let scoreP = document.getElementById("score");
+        let recordP = document.getElementById("record");
+
+        let record = 0;
+
+        let counter = 0;
+        let score = 0;
+
+        let canvasWidth = document.getElementById("myCanvas" ).width;
+        let canvasHeight = document.getElementById("myCanvas" ).height;
+
+        let player = {x: 300, y: 300, sumX: 1, sumY: 1, width: 10, height: 10};
+
+        let squares = [];
+        squares.push(newSquare());
+
+        let arrowUp = false;
+        let arrowDown = false;
+        let arrowLeft = false;
+        let arrowRight = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key == "ArrowUp") {
+                arrowUp = true;
+            }
+            if (e.key == "ArrowDown") {
+                arrowDown = true;
+            }
+            if (e.key == "ArrowLeft") {
+                arrowLeft = true;
+            }
+            if (e.key == "ArrowRight") {
+                arrowRight = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key == "ArrowUp") {
+                arrowUp = false;
+            }
+            if (e.key == "ArrowDown") {
+                arrowDown = false;
+            }
+            if (e.key == "ArrowLeft") {
+                arrowLeft = false;
+            }
+            if (e.key == "ArrowRight") {
+                arrowRight = false;
+            }
+        });
+
+        requestAnimationFrame(() => {draw()});
+
+        function draw() {
+            if (arrowUp && player.y > 1) {
+                player.sumY-=2;
+            }
+            if (arrowDown && (player.y+player.height) < canvasHeight-1) {
+                player.sumY+=2;
+            }
+            if (arrowLeft && player.x > 1) {
+                player.sumX-=2;
+            }
+            if (arrowRight && (player.x+player.width) < canvasWidth-1) {
+                player.sumX+=2;
+            }
+
+            player.x += player.sumX;
+            player.y += player.sumY;
+
+            var c = document.getElementById("myCanvas");
+            var ctx = c.getContext("2d");
+            ctx.beginPath();
+
+            // Draw rectangles
+            for (let i = 0; i < squares.length; i++) {
+                squares[i].x += squares[i].sumX;
+                squares[i].y += squares[i].sumY;
+                ctx.rect(squares[i].x, squares[i].y, squares[i].width, squares[i].height);
+            }
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            // Draw player:
+            ctx.rect(player.x, player.y, player.width, player.height);
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            ctx.stroke();
+
+            // Detecting rectangle collition
+            for (let i = 0; i < squares.length; i++) {
+                if (squares[i].x < 1) {
+                    squares[i].sumX = 1;
+                } else if (squares[i].x > canvasWidth - squares[i].width -1) {
+                    squares[i].sumX = -1;
+                }
+
+                if (squares[i].y < 1) {
+                    squares[i].sumY = +1;
+                } else if (squares[i].y > canvasHeight - squares[i].height -1) {
+                    squares[i].sumY = -1;
+                }
+            }
+
+            // Player lose:
+            for (let i = 0; i < squares.length; i++) {
+                if ((player.x+player.width) >= squares[i].x && player.x <= (squares[i].x + squares[i].width) && (player.y + player.height) >= squares[i].y && player.y < (squares[i].y+squares[i].height)) {
+                    if (score > record) {
+                        recordP.innerHTML = "Record: " + score;
+                        record = score;
+                    }
+
+                    squares = [newSquare()];
+                    score = 0;
+                    scoreP.innerHTML = "Score: " + 0;
+                    counter = 0;
+                    player.x = 300;
+                    player.y = 300;
+                }
+            }
+            
+
+            player.sumX = 0;
+            player.sumY = 0;
+
+            counter++;
+            if (counter == 500) {
+                
+                squares.push(newSquare());
+                counter = 0;
+                score++;
+                scoreP.innerHTML = "Score: " + score
+            }
+
+            requestAnimationFrame(() => {draw()});
+        }
+
+        function newSquare() {
+            let square = {x: 0, y: 0, sumX: 1, sumY: 1, width: 150, height: 100};
+            let option = Math.floor(Math.random() * 3);
+            if (option == 0) {
+                square = {x: -square.width, y: Math.floor(Math.random() * canvasHeight-100), sumX: 1, sumY: 1, width: 150, height: 100};
+            } else if (option == 1) {
+                square = {x: Math.floor(Math.random() * canvasWidth), y: -square.height, sumX: 1, sumY: 1, width: 150, height: 100};
+            } else if (option == 2) {
+                square = {x: canvasWidth, y: Math.floor(Math.random() * canvasHeight-100), sumX: -1, sumY: 1, width: 150, height: 100};
+            } else {
+                square = {x: Math.floor(Math.random() * width), y: canvasHeight, sumX: -1, sumY: 1, width: 150, height: 100};
+            }
+
+            return square;
+        }
+
+    </script>
+    
+</body>
+</html>
